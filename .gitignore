@@ -1,0 +1,14 @@
+# Ignorar datos y modelos pesados
+data/
+*.csv
+*.ods
+*.jpg
+*.png
+*.h5
+*.keras
+
+# Ignorar archivos temporales de Python y Jupyter
+__pycache__/
+.ipynb_checkpoints/
+venv/
+env/

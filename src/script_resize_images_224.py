@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None   # Suprimir DecompressionBombWarning (fotos >89Mp
 BASE_DIR  = pathlib.Path(__file__).resolve().parent.parent
 SRC_DIR   = BASE_DIR / "data" / "Front_Images"        # imágenes originales
 DST_DIR   = BASE_DIR / "data" / "Front_Images_224"    # destino 224x224
-SYNC_CSV  = BASE_DIR / "data" / "listingV5_CNN.csv"   # CSV ya sincronizado (5.667 filas)
+SYNC_CSV  = BASE_DIR / "data" / "listingV5_CNN.csv"   # ← CSV ya sincronizado (5.667 filas)
 
 # Parámetros de transformación (deben coincidir con torchvision en el notebook)
 RESIZE_TO = 256   # Paso 1: lado más corto → 256 px
@@ -64,6 +64,7 @@ with open(SYNC_CSV, newline="", encoding="utf-8") as f:
 
 print(f"IDs válidos en CSV sincronizado : {len(ids_validos):,}")
 
+# Crear carpeta de destino
 DST_DIR.mkdir(parents=True, exist_ok=True)
 print(f"Carpeta destino                 : {DST_DIR}")
 
@@ -71,7 +72,8 @@ print(f"Carpeta destino                 : {DST_DIR}")
 # INVENTARIO DE IMÁGENES FUENTE
 # ============================================================
 # Deduplicar con set de stems para evitar contar la misma imagen dos veces
-# en sistemas case-insensitive (Windows/macOS)
+# en sistemas case-insensitive (Windows/macOS) donde *.jpg y *.JPG
+# pueden devolver los mismos ficheros físicos
 stems_vistos = set()
 image_files  = []
 
@@ -82,12 +84,10 @@ for ext in ("*.jpg", "*.jpeg", "*.JPG", "*.JPEG"):
             image_files.append(f)
 
 # Filtrar solo los IDs que están en el CSV sincronizado
-# ✅ FIX: int(float(f.stem)) maneja nombres tanto "96033.jpeg" como "96033.0.jpeg"
 image_files_sync = []
 for f in image_files:
     try:
-        img_id = int(float(f.stem))
-        if img_id in ids_validos:
+        if int(f.stem) in ids_validos:
             image_files_sync.append(f)
     except ValueError:
         pass
@@ -150,8 +150,8 @@ print("=" * 60)
 
 for i, src_path in enumerate(image_files_sync, start=1):
 
-    # ✅ FIX: int(float(...)) normaliza "96033.0" → "96033" en el nombre de salida
-    dst_path = DST_DIR / f"{int(float(src_path.stem))}.jpg"
+    # Normalizar siempre el nombre de salida a {id}.jpg minúsculas
+    dst_path = DST_DIR / f"{int(src_path.stem)}.jpg"
 
     # Saltar si ya existe (permite reanudar si el script se interrumpe)
     if dst_path.exists():

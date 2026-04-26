@@ -1,0 +1,8 @@
+{
+  "price_mean": 113.39399538106235,
+  "price_std": 63.367108538416005,
+  "img_size": 224,
+  "architecture": "ResNet34",
+  "val_mae": 35.7869,
+  "random_seed": 42
+}

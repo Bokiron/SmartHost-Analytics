@@ -1,10 +1,10 @@
 # frontend/components/sidebar.py
 import streamlit as st
 # Al inicio del archivo, añade el import
+from utils.calculos import DEFAULTS_VALORACIONES
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from utils.geo import geocodificar_direccion, distancia_al_centro, distancia_playa_mas_cercana
-
 def render_sidebar() -> tuple[dict, object, bool]:
     """Renderiza el sidebar y devuelve (form, foto, calcular)."""
 
@@ -132,13 +132,19 @@ def render_sidebar() -> tuple[dict, object, bool]:
         st.divider()
 
         st.subheader("⭐ Valoraciones")
-        reviews_per_month     = st.number_input("Reseñas por mes", 0.0, 20.0, 1.5, 0.1)
-        number_of_reviews_ltm = st.number_input("Reseñas últimos 12 meses", 0, 200, 12)
-        rating      = st.slider("Valoración global",         0.0, 5.0, 4.8, 0.1)
-        accuracy    = st.slider("Precisión del anuncio",     0.0, 5.0, 4.7, 0.1)
-        cleanliness = st.slider("Limpieza",                  0.0, 5.0, 4.9, 0.1)
-        location    = st.slider("Ubicación",                 0.0, 5.0, 4.6, 0.1)
-        value       = st.slider("Relación calidad/precio",   0.0, 5.0, 4.5, 0.1)
+        D_val = DEFAULTS_VALORACIONES if anfitrion_nuevo else DEFAULTS_VALORACIONES
+
+        reviews_per_month     = st.number_input("Reseñas por mes", 0.0, 20.0,
+                                    value=float(D_val["reviews_per_month"]), step=0.1,
+                                    disabled=anfitrion_nuevo)
+        number_of_reviews_ltm = st.number_input("Reseñas últimos 12 meses", 0, 200,
+                                    value=int(D_val["number_of_reviews_ltm"]),
+                                    disabled=anfitrion_nuevo)
+        rating      = st.slider("Valoración global",       0.0, 5.0, float(D_val["rating"]),      0.1, disabled=anfitrion_nuevo)
+        accuracy    = st.slider("Precisión del anuncio",   0.0, 5.0, float(D_val["accuracy"]),    0.1, disabled=anfitrion_nuevo)
+        cleanliness = st.slider("Limpieza",                0.0, 5.0, float(D_val["cleanliness"]), 0.1, disabled=anfitrion_nuevo)
+        location    = st.slider("Ubicación",               0.0, 5.0, float(D_val["location"]),    0.1, disabled=anfitrion_nuevo)
+        value       = st.slider("Relación calidad/precio", 0.0, 5.0, float(D_val["value"]),       0.1, disabled=anfitrion_nuevo)
 
         st.divider()
         calcular = st.button("🔍 Calcular precio y ROI", use_container_width=True, type="primary")

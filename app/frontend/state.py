@@ -3,7 +3,7 @@ import streamlit as st
 
 
 def init_state() -> None:
-    """Crea las claves del session_state si aún no existen."""
+    """Crea las claves del session_state, si aún no existen."""
     defaults = {
         "resultado_base":     None,
         "datos_payload":      None,

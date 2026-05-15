@@ -23,7 +23,7 @@ FACTOR_RESENAS        = 2.0   # corrección: no todos los huéspedes dejan rese�
 
 def calcular_dias_ocupados(reviews_per_month: float) -> float:
     """Estima los días ocupados al año a partir de las reseñas mensuales."""
-    return round(reviews_per_month * FACTOR_RESENAS * ESTANCIA_MEDIA_MALAGA * 12, 1)
+    return min(round(reviews_per_month * FACTOR_RESENAS * ESTANCIA_MEDIA_MALAGA * 12, 1), 365)
 
 def calcular_ingresos_anuales(precio_noche: float, dias_ocupados: float) -> float:
     """Ingresos brutos anuales estimados."""

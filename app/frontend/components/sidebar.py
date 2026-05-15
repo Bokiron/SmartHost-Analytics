@@ -1,6 +1,9 @@
 # frontend/components/sidebar.py
 import streamlit as st
-
+# Al inicio del archivo, añade el import
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+from utils.geo import geocodificar_direccion, distancia_al_centro, distancia_playa_mas_cercana
 
 def render_sidebar() -> tuple[dict, object, bool]:
     """Renderiza el sidebar y devuelve (form, foto, calcular)."""
@@ -14,21 +17,62 @@ def render_sidebar() -> tuple[dict, object, bool]:
             st.image(foto, caption="Foto actual", use_container_width=True)
 
         st.divider()
+        st.subheader("👤 Datos del anfitrión")
 
-        st.subheader(" Datos del anfitrión")
-        host_response_time = st.selectbox(
-            "Tiempo de respuesta",
-            ["within an hour", "within a few hours", "within a day", "a few days or more"],
+        anfitrion_nuevo = st.checkbox(
+            "Soy anfitrión nuevo / perfil inversor",
+            value=False,
+            help="Marca esta opción si aún no tienes historial en Airbnb. "
+                "Se usarán valores objetivo óptimos para la predicción."
         )
-        host_response_rate = st.slider("Tasa de respuesta", 0.0, 1.0, 0.95, 0.01)
-        host_is_superhost  = st.checkbox("¿Es Superhost?", value=True)
+
+        if anfitrion_nuevo:
+            # Valores óptimos fijos — no se muestran sliders
+            host_response_time = "within an hour"
+            host_response_rate = 1.0
+            host_is_superhost  = False
+            st.info(
+                "Se asume respuesta en menos de 1h, tasa del 100% y perfil estándar. "
+                "El precio estimado refleja el potencial con una gestión profesional."
+            )
+        else:
+            host_response_time = st.selectbox(
+                "Tiempo de respuesta",
+                ["within an hour", "within a few hours", "within a day", "a few days or more"],
+            )
+            host_response_rate = st.slider("Tasa de respuesta", 0.0, 1.0, 0.95, 0.01)
+            host_is_superhost  = st.checkbox("¿Es Superhost?", value=True)
 
         st.divider()
+        st.subheader("📍 Ubicación")
 
-        st.subheader(" Ubicación")
-        distancia_centro = st.number_input("Distancia al centro (km)", 0.0, 20.0, 0.5, 0.1)
-        distancia_playa  = st.number_input("Distancia a la playa (km)", 0.0, 20.0, 1.2, 0.1)
-        longitude        = st.number_input("Longitud", -5.0, -4.0, -4.42, 0.001, format="%.3f")
+        direccion = st.text_input(
+            "Dirección del apartamento",
+            placeholder="Ej: Calle Larios 5, Málaga",
+        )
+
+        # Valores por defecto (centro de Málaga)
+        longitude        = -4.4213
+        distancia_centro = 0.0
+        distancia_playa  = 0.5
+
+        if direccion:
+            with st.spinner("Buscando dirección..."):
+                coords = geocodificar_direccion(direccion)
+
+            if coords:
+                lat, lon         = coords
+                longitude        = round(lon, 5)
+                distancia_centro = distancia_al_centro(lat, lon)
+                distancia_playa  = distancia_playa_mas_cercana(lat, lon)
+
+                st.success("📍 Dirección encontrada")
+                col_g1, col_g2, col_g3 = st.columns(3)
+                col_g1.metric("Longitud",     f"{longitude}")
+                col_g2.metric("Dist. centro", f"{distancia_centro} km")
+                col_g3.metric("Dist. playa",  f"{distancia_playa} km")
+            else:
+                st.warning("⚠️ Dirección no encontrada. Se usarán valores por defecto.")
 
         st.divider()
 
@@ -74,13 +118,13 @@ def render_sidebar() -> tuple[dict, object, bool]:
         st.markdown("<hr style='margin: 4px 0; border-color: transparent'>", unsafe_allow_html=True) # Básicos (se dan por supuestos, no afectan al modelo)
         col_e, col_f = st.columns(2)
         with col_e:
-            st.checkbox("🍽️ Vajilla",        value=True,  disabled=True)
-            st.checkbox("🪝 Perchas",         value=True,  disabled=True)
-            st.checkbox("🚿 Agua caliente",   value=True,  disabled=True)
+            st.checkbox("🍽️ Vajilla",        value=True,  )
+            st.checkbox("🪝 Perchas",         value=True,  )
+            st.checkbox("🚿 Agua caliente",   value=True,  )
         with col_f:
-            st.checkbox("🧴 Champú",          value=True,  disabled=True)
-            st.checkbox("📶 WiFi",            value=True,  disabled=True)
-            st.checkbox("🧻 Esenciales",      value=True,  disabled=True)
+            st.checkbox("🧴 Champú",          value=True,  )
+            st.checkbox("📶 WiFi",            value=True,  )
+            st.checkbox("🧻 Esenciales",      value=True,  )
 
         st.markdown("<hr style='margin: 4px 0; border-color: transparent'>", unsafe_allow_html=True)
         private_bathroom = st.checkbox("Baño privado", value=True)

@@ -122,21 +122,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 ```
-
-### 2. Ejecución del Preprocesamiento de Imágenes (One-Shot)
-
-Si dispones del dataset de imágenes en bruto dentro de `data/Front_Images/`, ejecuta el script de estandarización geométrica antes de iniciar los servicios:
-
-```bash
-python src/script_resize_images_224.py
-
-```
-
-*Este script aplicará un escalado proporcional y un CenterCrop automático de 224x224 píxeles, depurando imágenes corruptas.*
-
 ---
 
-## Despliegue en Entorno Local
+## 2. Ejecución notebooks y scripts
+
+Los cuadernos jupyter notebooks están numerados según orden de ejecución 0X_xxx.ipynb, deben ejecutarse en orden para el correcto entrenamiento de modelos.
+
+Los scripts de descarga de imagenes de portada de los anuncios debe ejecutarse después del 02_EDA.ipynb, después de este mismo podemos ejecutar el de redimensionamiento de imágenes a 224 x 224.
+
+## 3. Despliegue en Entorno Local
 
 El sistema requiere el arranque independiente de sus dos capas para mantener la arquitectura cliente-servidor desacoplada:
 

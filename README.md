@@ -105,7 +105,7 @@ SmartHostAnalytics/
 Abre una terminal en tu entorno local y ejecuta:
 
 ```bash
-git clone [https://github.com/tu-usuario/SmartHostAnalytics.git](https://github.com/tu-usuario/SmartHostAnalytics.git)
+git clone [https://github.com/Bokiron/SmartHostAnalytics.git](https://github.com/Bokiron/SmartHost-Analytics)
 cd SmartHostAnalytics
 
 ```

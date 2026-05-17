@@ -1,55 +1,31 @@
-
 # frontend/pages/3_Sobre_el_Modelo.py
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
-
 from state import init_state
-
-
-init_state()
-
-# frontend/pages/3_Sobre_el_Modelo.py
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import streamlit as st
-
-from state import init_state
-
 
 init_state()
 
 st.title(" Sobre el Modelo")
 st.caption("Arquitectura, métricas de evaluación y decisiones técnicas")
 
-# ── Métricas en test ──────────────────────────────────────────────────────────
-st.subheader(" Métricas en el conjunto de Test")
-col1, col2, col3 = st.columns(3)
-col1.metric(
-    "MAE (Error Absoluto Medio)",
-    "~26 €/noche",
-    help="En media, el modelo se equivoca ±26€ por noche",
-)
-col2.metric(
-    "R² (Coef. de determinación)",
-    "~0.59",
-    help="El modelo explica el 59% de la variación de precios",
-)
-col3.metric(
-    "Dataset de entrenamiento",
-    "5.739 anuncios",
-    help="Anuncios reales de Airbnb en Málaga tras limpieza",
-)
 
-st.divider()
-
-# ── Arquitectura dual ─────────────────────────────────────────────────────────
+# ── Arquitectura dual + métricas ──────────────────────────────────────────────
 st.subheader(" Arquitectura Dual")
 tab1, tab2, tab3 = st.tabs(["Modo 1 · Tabular (MLP)", "Modo 2 · Multimodal", "Fusión"])
 
 with tab1:
+    st.subheader(" Métricas en el conjunto de Test")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("MAE (Error Absoluto Medio)", "~26 €/noche",
+                help="En media, el modelo se equivoca ±26€ por noche")
+    col2.metric("R² (Coef. de determinación)", "~0.59",
+                help="El modelo explica el 59% de la variación de precios")
+    col3.metric("Dataset de entrenamiento", "5.739 anuncios",
+                help="Anuncios reales de Airbnb en Málaga tras limpieza")
+
+    st.divider()
     st.markdown("""
     **Tasador Base** — Solo datos tabulares
 
@@ -66,6 +42,18 @@ with tab1:
     """)
 
 with tab2:
+    st.subheader(" Métricas en el conjunto de Test")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("MAE (Error Absoluto Medio)", "21.47 €/noche",
+                delta="-4.53€ vs tabular", delta_color="inverse",
+                help="En media, el modelo se equivoca ±21€ por noche")
+    col2.metric("R² (Coef. de determinación)", "0.692",
+                delta="+0.102 vs tabular",
+                help="El modelo explica el 69.2% de la variación de precios")
+    col3.metric("Dataset de entrenamiento", "5.739 anuncios",
+                help="Anuncios reales de Airbnb en Málaga tras limpieza")
+
+    st.divider()
     st.markdown("""
     **Tasador Estético** — Imagen + datos tabulares
 
@@ -96,7 +84,9 @@ with tab3:
     y características físicas maximiza el precio predicho.
     """)
 
+
 st.divider()
+
 
 # ── Features más importantes ──────────────────────────────────────────────────
 st.subheader(" Features con mayor poder predictivo")

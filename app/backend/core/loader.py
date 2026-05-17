@@ -92,9 +92,9 @@ async def lifespan(app: FastAPI):
         "metadata":         metadata,
     })
 
-    print("✅ Todos los artefactos cargados correctamente.")
+    print(" Todos los artefactos cargados correctamente.")
     yield  # El servidor corre aquí — todo lo de abajo es el apagado
 
     # Liberar memoria GPU/RAM al apagar el servidor
     artifacts.clear()
-    print("🛑 Servidor apagado. Artefactos liberados.")
+    print(" Servidor apagado. Artefactos liberados.")

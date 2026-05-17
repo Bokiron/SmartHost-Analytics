@@ -14,7 +14,7 @@ def render_resultados(r: dict) -> None:
         precio_base, precio_visual, impacto_visual_eur, impacto_visual_pct,
         dias_ocupados_anio, ingresos_anuales_base, ingresos_anuales_visual.
     """
-    st.success("✅ Análisis completado")
+    st.success(" Análisis completado")
     st.divider()
 
     # ── Precios por noche ─────────────────────────────────────────────────────

@@ -17,7 +17,7 @@ def render_sidebar() -> tuple[dict, object, bool]:
             st.image(foto, caption="Foto actual", use_container_width=True)
 
         st.divider()
-        st.subheader("👤 Datos del anfitrión")
+        st.subheader(" Datos del anfitrión")
 
         anfitrion_nuevo = st.checkbox(
             "Soy anfitrión nuevo / perfil inversor",
@@ -44,7 +44,7 @@ def render_sidebar() -> tuple[dict, object, bool]:
             host_is_superhost  = st.checkbox("¿Es Superhost?", value=True)
 
         st.divider()
-        st.subheader("📍 Ubicación")
+        st.subheader(" Ubicación")
 
         direccion = st.text_input(
             "Dirección del apartamento",
@@ -66,13 +66,10 @@ def render_sidebar() -> tuple[dict, object, bool]:
                 distancia_centro = distancia_al_centro(lat, lon)
                 distancia_playa  = distancia_playa_mas_cercana(lat, lon)
 
-                st.success("📍 Dirección encontrada")
+                st.success(" Dirección encontrada")
                 col_g1, col_g2, col_g3 = st.columns(3)
-                col_g1.metric("Longitud",     f"{longitude}")
-                col_g2.metric("Dist. centro", f"{distancia_centro} km")
-                col_g3.metric("Dist. playa",  f"{distancia_playa} km")
             else:
-                st.warning("⚠️ Dirección no encontrada. Se usarán valores por defecto.")
+                st.warning(" Dirección no encontrada. Se usarán valores por defecto.")
 
         st.divider()
 
@@ -93,45 +90,45 @@ def render_sidebar() -> tuple[dict, object, bool]:
         st.markdown("<hr style='margin: 4px 0; border-color: transparent'>", unsafe_allow_html=True) # Variables individuales del modelo + score
         col_a, col_b = st.columns(2)
         with col_a:
-            has_cooking_basics   = st.checkbox("🍳 Cocina básica",  value=True)
-            has_tv               = st.checkbox("📺 TV",             value=True)
-            has_air_conditioning = st.checkbox("❄️ Aire acond.",    value=True)
-            has_washer           = st.checkbox("🫧 Lavadora",       value=True)
+            has_cooking_basics   = st.checkbox(" Cocina básica",  value=True)
+            has_tv               = st.checkbox(" TV",             value=True)
+            has_air_conditioning = st.checkbox(" Aire acond.",    value=True)
+            has_washer           = st.checkbox(" Lavadora",       value=True)
         with col_b:
-            has_heating          = st.checkbox("🔥 Calefacción",    value=True)
-            has_freezer          = st.checkbox("🧊 Congelador",     value=False)
-            has_coffee_maker     = st.checkbox("☕ Cafetera",       value=True)
-            has_balcony          = st.checkbox("🌿 Balcón/terraza", value=False)
+            has_heating          = st.checkbox(" Calefacción",    value=True)
+            has_freezer          = st.checkbox(" Congelador",     value=False)
+            has_coffee_maker     = st.checkbox(" Cafetera",       value=True)
+            has_balcony          = st.checkbox(" Balcón/terraza", value=False)
 
         st.markdown("<hr style='margin: 4px 0; border-color: transparent'>", unsafe_allow_html=True) # Solo suman al amenities score
         col_c, col_d = st.columns(2)
         with col_c:
-            has_kitchen    = st.checkbox("🍽️ Cocina completa", value=True)
-            has_hair_dryer = st.checkbox("💨 Secador pelo",    value=True)
-            has_iron       = st.checkbox("👔 Plancha",          value=True)
-            has_bed_linens = st.checkbox("🛏️ Ropa de cama",   value=True)
+            has_kitchen    = st.checkbox(" Cocina completa", value=True)
+            has_hair_dryer = st.checkbox(" Secador pelo",    value=True)
+            has_iron       = st.checkbox(" Plancha",          value=True)
+            has_bed_linens = st.checkbox(" Ropa de cama",   value=True)
         with col_d:
-            has_microwave    = st.checkbox("📡 Microondas", value=True)
-            has_refrigerator = st.checkbox("🧃 Nevera",     value=True)
-            has_toaster      = st.checkbox("🍞 Tostadora",  value=False)
+            has_microwave    = st.checkbox(" Microondas", value=True)
+            has_refrigerator = st.checkbox(" Nevera",     value=True)
+            has_toaster      = st.checkbox(" Tostadora",  value=False)
         
         st.markdown("<hr style='margin: 4px 0; border-color: transparent'>", unsafe_allow_html=True) # Básicos (se dan por supuestos, no afectan al modelo)
         col_e, col_f = st.columns(2)
         with col_e:
-            st.checkbox("🍽️ Vajilla",        value=True,  )
-            st.checkbox("🪝 Perchas",         value=True,  )
-            st.checkbox("🚿 Agua caliente",   value=True,  )
+            st.checkbox(" Vajilla",        value=True,  )
+            st.checkbox(" Perchas",         value=True,  )
+            st.checkbox(" Agua caliente",   value=True,  )
         with col_f:
-            st.checkbox("🧴 Champú",          value=True,  )
-            st.checkbox("📶 WiFi",            value=True,  )
-            st.checkbox("🧻 Esenciales",      value=True,  )
+            st.checkbox(" Champú",          value=True,  )
+            st.checkbox(" WiFi",            value=True,  )
+            st.checkbox(" Esenciales",      value=True,  )
 
         st.markdown("<hr style='margin: 4px 0; border-color: transparent'>", unsafe_allow_html=True)
         private_bathroom = st.checkbox("Baño privado", value=True)
 
         st.divider()
 
-        st.subheader("⭐ Valoraciones")
+        st.subheader(" Valoraciones")
         D_val = DEFAULTS_VALORACIONES if anfitrion_nuevo else DEFAULTS_VALORACIONES
 
         reviews_per_month     = st.number_input("Reseñas por mes", 0.0, 20.0,
@@ -147,7 +144,7 @@ def render_sidebar() -> tuple[dict, object, bool]:
         value       = st.slider("Relación calidad/precio", 0.0, 5.0, float(D_val["value"]),       0.1, disabled=anfitrion_nuevo)
 
         st.divider()
-        calcular = st.button("🔍 Calcular precio y ROI", use_container_width=True, type="primary")
+        calcular = st.button(" Calcular precio y ROI", use_container_width=True, type="primary")
 
     form = {
         "host_response_time": host_response_time, "host_response_rate": host_response_rate,

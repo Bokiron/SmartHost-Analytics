@@ -20,7 +20,7 @@ st.markdown("""
 **SmartHost Analytics** utiliza redes neuronales multimodales para ayudarte
 a maximizar los ingresos de tu apartamento turístico en Málaga.
 
-### Navega por las secciones 👈
+### Navega por las secciones 
 
 | Página | Descripción |
 |---|---|

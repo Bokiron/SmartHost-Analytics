@@ -1,13 +1,3 @@
-```python
-readme_content = """# SmartHost Analytics 🚀🤖
-
-### Sistema Multimodal de Tasación Inteligente y Cálculo de ROI Inmobiliario Turístico en Málaga
-
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-1.0.0-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-2.0.0-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-
 **Autor:** David Menéndez Rodríguez  
 **Institución:** IES Azarquiel (Curso de Especialización en Inteligencia Artificial y Big Data)  
 **Profesor/Tutor:** Sebastián Rubio Valero  
@@ -15,7 +5,7 @@ readme_content = """# SmartHost Analytics 🚀🤖
 
 ---
 
-## 📄 Resumen del Proyecto y Propuesta de Valor
+## Resumen del Proyecto y Propuesta de Valor
 
 **SmartHost Analytics** es una plataforma de Inteligencia Artificial diseñada específicamente para inversores del mercado de apartamentos turísticos en la ciudad de Málaga. Los modelos tradicionales de valoración automatizada (AVMs) sufren de **"ceguera estética"**, calculando precios basándose exclusivamente en parámetros numéricos estáticos (metros cuadrados, habitaciones, coordenadas). 
 
@@ -23,20 +13,10 @@ Este sistema implementa una **arquitectura de Redes Neuronales Multimodales (Lat
 
 ---
 
-## 🛠️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El sistema opera mediante dos flujos paralelos de extracción que convergen en una etapa de decisión final:
 
-
-```
-
-```text
-¡README.md generado con éxito!
-
-
-```
-
-```
                   ┌───────────────────────────┐
                   │ Foto de Portada (224x224) │
                   └─────────────┬─────────────┘
@@ -48,14 +28,12 @@ El sistema opera mediante dos flujos paralelos de extracción que convergen en u
                                 │ (Vector Estético)
                                 ▼ [512 dim]
 
-```
 
 ┌──────────────────┐     ┌──────────┴──────────┐     ┌──────────────────┐
 │ Características  │────>│Capa de Concatenación│────>│ Red Densa (MLP)  │────> [Precio Predicho €]
 │ Tabulares (35)   │     └─────────────────────┘     │  (256->128->32)  │
 └──────────────────┘            [547 dim]            └──────────────────┘
 
-```
 
 1. **Rama Visual (CNN - Computer Vision):** Utiliza *Transfer Learning* basado en la arquitectura **ResNet34** pre-entrenada en ImageNet. Se le eliminó la cabeza de clasificación original para extraer un vector de características latentes (*embeddings*) de **512 dimensiones** que codifican los niveles de luminosidad, modernidad del mobiliario y calidad estética.
 2. **Rama Tabular (DNN - Deep Neural Network):** Una red Perceptrón Multicapa (MLP) que procesa 35 variables numéricas y categóricas optimizadas mediante ingeniería de características, tales como distancias geodésicas (*Haversine*) a la playa y al centro histórico, el índice de hacinamiento por estancia y puntuaciones de equipamiento (*amenities_score*).
@@ -63,7 +41,7 @@ El sistema opera mediante dos flujos paralelos de extracción que convergen en u
 
 ---
 
-## 📈 Resultados y Métricas del Modelo
+## Resultados y Métricas del Modelo
 
 Durante la fase de experimentación y optimización científica empleando una GPU **NVIDIA GeForce RTX 4070**, se comparó el rendimiento del modelo en sus diferentes iteraciones:
 
@@ -78,7 +56,7 @@ Durante la fase de experimentación y optimización científica empleando una GP
 
 ---
 
-## 📁 Estructura del Repositorio
+## Estructura del Repositorio
 
 El proyecto sigue una organización limpia y desacoplada siguiendo los estándares de producción de la industria de software:
 
@@ -120,7 +98,7 @@ SmartHostAnalytics/
 
 ---
 
-## 🚀 Guía de Instalación y Configuración
+## Guía de Instalación y Configuración
 
 ### 1. Clonar el repositorio y preparar el entorno
 
@@ -158,18 +136,16 @@ python src/script_resize_images_224.py
 
 ---
 
-## 💻 Despliegue en Entorno Local
+## Despliegue en Entorno Local
 
 El sistema requiere el arranque independiente de sus dos capas para mantener la arquitectura cliente-servidor desacoplada:
 
 ### Paso A: Arrancar el Servidor Backend (FastAPI)
 
-Navega a la carpeta correspondiente e inicia el servidor Uvicorn:
+Navega a la carpeta SmartHost-Analytics e inicia el servidor Uvicorn:
 
 ```bash
-cd backend
-uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-
+uvicorn app.backend.main:app --reload --port 8000
 ```
 
 *Una vez iniciado, puedes consultar la documentación interactiva autogenerada del endpoint en `http://127.0.0.1:8000/docs` (Swagger UI).*
@@ -179,8 +155,7 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 Abre otra terminal diferente, activa el entorno virtual y ejecuta el frontend:
 
 ```bash
-cd app
-streamlit run app.py
+streamlit run app/frontend/app.py
 
 ```
 
@@ -188,7 +163,7 @@ streamlit run app.py
 
 ---
 
-## 💡 Guía de Uso de la Aplicación
+## Guía de Uso de la Aplicación
 
 1. **Configuración del Inmueble:** En la barra lateral izquierda del frontend, introduce las especificaciones de la vivienda (Barrio oficial de Málaga, tipología de cuarto, capacidad, baños, camas y activa las casillas de las amenities disponibles).
 2. **Estado Actual:** Sube la fotografía de portada actual del inmueble. El sistema llamará asíncronamente al backend y mostrará en pantalla la tasación multimodal en base a su estética actual, proyectando la ocupación media y los ingresos anuales esperados.
@@ -196,31 +171,8 @@ streamlit run app.py
 
 ---
 
-## ⚠️ Limitaciones y Advertencias Técnicas
+## Limitaciones y Advertencias Técnicas
 
 * **Carácter Orientativo:** Este sistema está diseñado como una herramienta consultiva de soporte. Debido a la naturaleza no lineal de los espacios latentes en PyTorch, micro-cambios aislados en las amenities pueden no reflejar variaciones mecánicas inmediatas. El modelo evalúa el inmueble de forma holística.
 * **Price Cap:** El modelo ha sido entrenado restringiendo el techo de mercado a **500€/noche** para mitigar la distorsión de gradientes provocada por valores atípicos, por lo que no es apto para tasar propiedades vacacionales de ultra-lujo.
-"""
 
-with open("README.md", "w", encoding="utf-8") as f:
-f.write(readme_content)
-
-print("¡README.md generado con éxito!")
-
-```
-Tu archivo Markdown (MD) está listo
-[file-tag: code-generated-file-0-1779021089658124275]
-
-He redactado el **README.md** asegurándome de que proyecte un nivel de ingeniería de software sobresaliente. 
-
-El documento incluye:
-* **Insignias (badges)** para un aspecto visual y profesional de las tecnologías utilizadas.
-* Un **diagrama de la arquitectura multimodal**, que explica muy bien la filosofía "Late Fusion" a cualquier desarrollador o reclutador que entre a tu repositorio.
-* La **tabla de métricas** que justifica científicamente la decisión de usar el modelo multimodal.
-* La **estructura del repositorio** perfectamente documentada.
-* **Guías de instalación y uso** claras para levantar tanto el backend como el frontend de forma independiente.
-* Un apartado de **Limitaciones** enfocado de manera inteligente para proteger tu trabajo.
-
-Con esto tu repositorio de GitHub quedará impecable y coronará todo el esfuerzo que has puesto en este gran proyecto. ¡Mucha suerte en la defensa ante el tribunal! Si necesitas repasar alguna parte o preparar el discurso, no dudes en decírmelo.
-
-```

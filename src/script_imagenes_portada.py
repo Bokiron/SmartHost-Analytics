@@ -1,210 +1,89 @@
-"""
-00_resize_images.py
-===================
-Script de pre-procesado ONE-SHOT para SmartHost Analytics — Fase 3 CNN.
+import pandas as pd
+import requests
+import os
+import time
+from pathlib import Path
 
-Convierte todas las imágenes de portada de Airbnb (resolución original variable)
-al formato estándar de entrada de MobileNetV2: 224×224 píxeles.
+# ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
+# Path(__file__) obtiene la ruta absoluta de este script (src/script_imagenes_portada.py)
+# .resolve().parent sube un nivel para apuntar a la carpeta src/
+BASE_DIR = Path(__file__).resolve().parent
 
-Proceso:
-Paso 1 — Resize(256)      : escala el lado más corto a 256px manteniendo proporción
-Paso 2 — CenterCrop(224)  : recorta el cuadrado central de 224×224 px
+# Construimos las rutas a data/ subiendo otro nivel desde src/ hasta la raíz del proyecto
+CSV_PATH = BASE_DIR.parent / 'data' / 'listingV3.csv'
+IMG_DIR  = BASE_DIR.parent / 'data' / 'Front_Images'
+# CSV donde guardaremos los IDs de apartamentos cuya imagen no se pudo descargar,
+# para limpiarlos posteriormente en el notebook de EDA
 
-EJECUCIÓN (una sola vez, antes de entrenar):
-python scripts/00_resize_images.py
+TIMEOUT = 10   # Segundos máximos esperando respuesta del servidor antes de abortar
+SLEEP   = 0.2  # Pausa entre peticiones para no saturar el servidor y evitar bloqueos de IP
 
-OUTPUT:
-data/Front_Images_224/  →  5.667 archivos .jpg de exactamente 224×224 px
-"""
+# ── PREPARACIÓN ───────────────────────────────────────────────────────────────
+# Crea la carpeta de imágenes si no existe. parents=True crea carpetas intermedias
+# si fueran necesarias. exist_ok=True evita error si ya existe.
+Path(IMG_DIR).mkdir(parents=True, exist_ok=True)
 
-import pathlib
-import sys
-import csv
-import random
-from PIL import Image, ImageFile
+# Cargamos solo las columnas que necesitamos: el ID del listing (para nombrar el archivo)
+# y la URL de la foto de portada. Eliminamos filas sin URL con dropna().
+# ⚠️  Sin .head() → descarga TODAS las filas del CSV
+df = pd.read_csv(CSV_PATH)[['id', 'picture_url']].dropna()
+#df = df.head() # cabecera para probar funcionamiento
 
-# ── Evitar crashes con imágenes truncadas o parcialmente corruptas ──────────
-ImageFile.LOAD_TRUNCATED_IMAGES = True
-Image.MAX_IMAGE_PIXELS = None   # Suprimir DecompressionBombWarning (fotos >89Mpx)
+print(f"📋 Total de imágenes a descargar: {len(df)}")
 
-# ============================================================
-# CONFIGURACIÓN DE RUTAS
-# ============================================================
-BASE_DIR  = pathlib.Path(__file__).resolve().parent.parent
-SRC_DIR   = BASE_DIR / "data" / "Front_Images"        # imágenes originales
-DST_DIR   = BASE_DIR / "data" / "Front_Images_224"    # destino 224x224
-SYNC_CSV  = BASE_DIR / "data" / "listingV5_CNN.csv"   # CSV ya sincronizado (5.667 filas)
+# Cabecera HTTP que simula un navegador real. Sin esto, Airbnb puede devolver
+# error 403 Forbidden al detectar que la petición viene de un script automático.
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/124.0.0.0 Safari/537.36'
+}
 
-# Parámetros de transformación (deben coincidir con torchvision en el notebook)
-RESIZE_TO = 256   # Paso 1: lado más corto → 256 px
-CROP_TO   = 224   # Paso 2: recorte central → 224×224 px
-QUALITY   = 95    # Calidad JPEG de salida (95 = prácticamente sin pérdida)
+# ── DESCARGA ──────────────────────────────────────────────────────────────────
+descargadas = 0
+fallidas    = 0
 
-# ============================================================
-# VALIDACIONES PREVIAS
-# ============================================================
-if not SRC_DIR.exists():
-    print(f"[ERROR] Carpeta de imágenes originales no encontrada: {SRC_DIR}")
-    sys.exit(1)
+for _, row in df.iterrows():
+    listing_id = row['id']
+    url        = row['picture_url']
 
-if not SYNC_CSV.exists():
-    print(f"[ERROR] CSV sincronizado no encontrado: {SYNC_CSV}")
-    print("        Ejecuta primero la Sección 1 del notebook 04_ModeloCNN.ipynb")
-    sys.exit(1)
+    # ── Extracción segura de extensión ────────────────────────────────────────
+    # Problema: algunas URLs no tienen extensión reconocible al final (terminan
+    # en un UUID sin .jpeg/.jpg). url.split('.')[-1] extraería en esos casos
+    # algo como "com/pictures/.../uuid", que contiene barras '/' y rompe la ruta.
+    # Solución: tomamos solo la última parte del path de la URL (antes de '?'),
+    # verificamos si tiene extensión válida y si no, asignamos .jpeg por defecto.
+    url_path   = url.split('?')[0]          # eliminamos parámetros de query
+    url_ending = url_path.split('/')[-1]    # último segmento del path (ej: "foto.jpeg")
+    ext_candidate = url_ending.split('.')[-1].lower() if '.' in url_ending else ''
 
-# Leer los IDs válidos del CSV sincronizado
-ids_validos = set()
-with open(SYNC_CSV, newline="", encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        try:
-            ids_validos.add(int(float(row["id"])))
-        except (ValueError, KeyError):
-            pass
+    # Solo aceptamos extensiones de imagen conocidas; cualquier otra → jpeg por defecto
+    ext      = ext_candidate if ext_candidate in ('jpeg', 'jpg', 'png', 'webp') else 'jpeg'
+    filename = os.path.join(IMG_DIR, f"{listing_id}.{ext}")
 
-print(f"IDs válidos en CSV sincronizado : {len(ids_validos):,}")
-
-DST_DIR.mkdir(parents=True, exist_ok=True)
-print(f"Carpeta destino                 : {DST_DIR}")
-
-# ============================================================
-# INVENTARIO DE IMÁGENES FUENTE
-# ============================================================
-# Deduplicar con set de stems para evitar contar la misma imagen dos veces
-# en sistemas case-insensitive (Windows/macOS)
-stems_vistos = set()
-image_files  = []
-
-for ext in ("*.jpg", "*.jpeg", "*.JPG", "*.JPEG"):
-    for f in SRC_DIR.glob(ext):
-        if f.stem.lower() not in stems_vistos:
-            stems_vistos.add(f.stem.lower())
-            image_files.append(f)
-
-# Filtrar solo los IDs que están en el CSV sincronizado
-# ✅ FIX: int(float(f.stem)) maneja nombres tanto "96033.jpeg" como "96033.0.jpeg"
-image_files_sync = []
-for f in image_files:
-    try:
-        img_id = int(float(f.stem))
-        if img_id in ids_validos:
-            image_files_sync.append(f)
-    except ValueError:
-        pass
-
-print(f"Imágenes encontradas en disco   : {len(image_files):,}")
-print(f"Imágenes a procesar (en CSV)    : {len(image_files_sync):,}")
-print()
-
-# ============================================================
-# FUNCIÓN DE TRANSFORMACIÓN
-# ============================================================
-def resize_and_crop(img: Image.Image) -> Image.Image:
-    """
-    Replica exactamente el pipeline torchvision:
-        1. Resize(256)     → lado más corto = 256px, proporción intacta
-        2. CenterCrop(224) → cuadrado central de 224×224 px
-
-    Ejemplo con imagen 1920×1080 (16:9):
-        Paso 1: factor = 256/1080 ≈ 0.237 → nueva resolución: 455×256
-        Paso 2: crop desde el centro → 224×224
-            · Altura: corta 16px arriba + 16px abajo
-            · Anchura: corta 115px izq + 116px der
-    """
-    w, h = img.size
-
-    # Paso 1: escalar lado más corto a RESIZE_TO
-    if w < h:
-        new_w = RESIZE_TO
-        new_h = round(h * RESIZE_TO / w)
-    else:
-        new_h = RESIZE_TO
-        new_w = round(w * RESIZE_TO / h)
-
-    img = img.resize((new_w, new_h), Image.LANCZOS)
-
-    # Paso 2: recortar cuadrado central de CROP_TO×CROP_TO
-    w2, h2 = img.size
-    left   = (w2 - CROP_TO) // 2
-    top    = (h2 - CROP_TO) // 2
-    right  = left + CROP_TO
-    bottom = top  + CROP_TO
-
-    img = img.crop((left, top, right, bottom))
-    return img  # 224×224 exacto
-
-# ============================================================
-# BUCLE DE PROCESADO
-# ============================================================
-procesadas  = 0
-ya_existian = 0
-errores     = 0
-
-total         = len(image_files_sync)
-intervalo_log = max(1, total // 20)   # log cada ~5% de progreso
-
-print("=" * 60)
-print("  INICIANDO REDIMENSIONADO")
-print(f"  Proceso: Resize({RESIZE_TO}) → CenterCrop({CROP_TO}×{CROP_TO})")
-print("=" * 60)
-
-for i, src_path in enumerate(image_files_sync, start=1):
-
-    # ✅ FIX: int(float(...)) normaliza "96033.0" → "96033" en el nombre de salida
-    dst_path = DST_DIR / f"{int(float(src_path.stem))}.jpg"
-
-    # Saltar si ya existe (permite reanudar si el script se interrumpe)
-    if dst_path.exists():
-        ya_existian += 1
-        if i % intervalo_log == 0:
-            print(f"  [{i/total*100:5.1f}%] {i:>5}/{total}  omitida (ya existe): {src_path.name}")
+    # Si ya existe en disco, la saltamos (reanudación del proceso sin repetir trabajo)
+    if os.path.exists(filename):
+        descargadas += 1
         continue
 
     try:
-        with Image.open(src_path) as img:
-            img_out = resize_and_crop(img.convert("RGB"))
-            img_out.save(dst_path, "JPEG", quality=QUALITY, optimize=True)
-            procesadas += 1
-    except Exception as e:
-        print(f"  [ERROR] {src_path.name}: {e}")
-        errores += 1
-        continue
+        response = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        response.raise_for_status()
 
-    if i % intervalo_log == 0:
-        print(f"  [{i/total*100:5.1f}%] {i:>5}/{total}  procesada : {src_path.name}")
+        with open(filename, 'wb') as f:
+            f.write(response.content)
 
-# ============================================================
-# RESUMEN FINAL
-# ============================================================
-print()
-print("=" * 60)
-print("  RESUMEN DE REDIMENSIONADO")
-print("=" * 60)
-print(f"  Total imágenes procesadas  : {procesadas:>6,}")
-print(f"  Ya existían (omitidas)     : {ya_existian:>6,}")
-print(f"  Errores                    : {errores:>6,}")
-print(f"  Destino                    : {DST_DIR}")
-print("=" * 60)
+        descargadas += 1
+        time.sleep(SLEEP)
 
-if errores > 0:
-    print(f"\n  AVISO: {errores} imagen(es) fallaron.")
-    print("  Estas filas deberán eliminarse del CSV sincronizado.")
-    print("  Consulta la Sección 1 del notebook para re-sincronizar.")
-else:
-    print("\n  Todas las imágenes procesadas correctamente.")
-    print("  Siguiente paso: actualizar IMG_DIR en el notebook a:")
-    print(f"  data/Front_Images_224/")
+    except requests.exceptions.RequestException as e:
+        # Error de red, timeout o HTTP error (404, 403, 500...)
+        # Registramos el ID para limpiarlo después en el notebook
+        print(f"  ❌ Error en ID {listing_id}: {e}")
+        fallidas += 1
 
-# ============================================================
-# VERIFICACIÓN RÁPIDA (muestra 3 imágenes aleatorias)
-# ============================================================
-muestras = random.sample(list(DST_DIR.glob("*.jpg")), min(3, procesadas + ya_existian))
-print()
-print("  Verificación aleatoria de tamaños en destino:")
-for m in muestras:
-    with Image.open(m) as img_check:
-        assert img_check.size == (CROP_TO, CROP_TO), \
-            f"ERROR: {m.name} tiene tamaño {img_check.size}, esperado ({CROP_TO}, {CROP_TO})"
-        print(f"    OK  {m.name:30s} → {img_check.size}")
-print()
-print("  Verificacion completada. Todas las muestras son 224x224.")
+    if descargadas % 100 == 0 and descargadas > 0:
+        print(f"  ✅ {descargadas} / {len(df)} descargadas...")
+
+print(f"\n🏁 Proceso completado: {descargadas} descargadas, {fallidas} fallidas.")
+print(f"📁 Imágenes guardadas en: {IMG_DIR}")

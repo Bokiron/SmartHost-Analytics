@@ -3,7 +3,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
-from state import init_state
+from utils.state import init_state
 
 init_state()
 
@@ -105,4 +105,18 @@ Según el análisis de correlaciones y el EDA realizado sobre los 5.739 anuncios
 
 > El aire acondicionado genera una diferencia de precio de **+55€/noche** de media
 > en Málaga, siendo el servicio con mayor impacto individual del dataset.
+""")
+
+# ── Limitaciones y Futuras Mejoras ────────────────────────────────────────────
+st.divider()
+st.subheader("⚠️ Limitaciones del Modelo y Futuras Mejoras")
+st.markdown("""
+Como en todo sistema de Machine Learning, es fundamental entender los límites operativos del modelo para un uso responsable en producción:
+
+*   **Sesgo Geográfico (Overfitting Local):** Las redes neuronales han sido entrenadas exclusivamente con datos del mercado de Málaga. La distribución de precios y el impacto estético (cercanía a la playa, estilo de decoración) no son directamente extrapolables a ciudades con dinámicas distintas (ej. Madrid o Toledo).
+*   **Segmento de Lujo vs Estándar:** El modelo presenta mayor varianza (error absoluto) en propiedades de ultralujo (>$500/noche) debido a la escasez de muestras en la cola derecha de la distribución de precios durante la fase de entrenamiento.
+*   **Evolución del Mercado (Data Drift):** El sector inmobiliario y turístico es altamente estacional e inflacionario. Los pesos actuales del modelo capturan una instantánea del mercado. 
+*   **Roadmap Técnico (Futuras iteraciones):**
+    1.  **Reentrenamiento continuo (MLOps):** Implementar un pipeline automatizado que ingeste datos mensuales para mitigar el *concept drift*.
+    2.  **Procesamiento de Lenguaje Natural (NLP):** Añadir una tercera rama a la arquitectura de fusión para analizar el sentimiento de la descripción textual del anuncio usando un modelo Transformer ligero (ej. BERT).
 """)

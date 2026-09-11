@@ -1,4 +1,7 @@
 # frontend/pages/1_Tasacion.py
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from turtle import st
 
 from PIL import Image

@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # frontend/pages/2_ROI_Calculator.py
 from PIL import Image
 from app.utils.state import init_state

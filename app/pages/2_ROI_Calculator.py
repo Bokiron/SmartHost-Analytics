@@ -1,36 +1,25 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# frontend/pages/2_ROI_Calculator.py
-from PIL import Image
-from app.utils.state import init_state
-from core.loader import load_all_artifacts
-from services.predictor import predecir_multimodal
-from services.roi_calculos import calcular_dias_ocupados, calcular_ingresos_anuales
 import streamlit as st
-from components.roi import foto_reforma
+from utils.state import init_state
+from components.roi import render_roi
 
 init_state()
 
-st.title(" ROI Calculator")
+st.title("💰 ROI Calculator")
 st.caption("Simula cuánto rinde económicamente reformar el apartamento")
 
-if st.button(" Calcular ROI de la reforma", type="primary"):
-            with st.spinner("Calculando impacto de la reforma..."):
-                try:
-                    artifacts = load_all_artifacts()
-                    pil_reforma = Image.open(foto_reforma)
-                    datos = st.session_state.datos_payload
-                    
-                    # Predicción de la nueva foto
-                    nuevo_precio_visual = predecir_multimodal(datos, pil_reforma, artifacts)
-                    dias_ocupados = calcular_dias_ocupados(datos["reviews_per_month"])
-                    nuevos_ingresos = calcular_ingresos_anuales(nuevo_precio_visual, dias_ocupados)
-                    
-                    st.session_state.resultado_reforma = {
-                        "precio_visual": nuevo_precio_visual,
-                        "ingresos_anuales_visual": nuevos_ingresos
-                    }
-                except Exception as e:
-                    st.error(f"Error al calcular la reforma: {e}")
-                    st.stop()
+if st.session_state.resultado_base is None:
+    st.warning("⚠️ Primero realiza un análisis en la página **Tasación**.")
+    st.page_link("pages/1_Tasacion.py", label="→ Ir a Tasación", icon="🏠")
+else:
+    r = st.session_state.resultado_base
+    with st.expander("📊 Resumen del análisis actual", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Precio base",   f"{r['precio_base']}€/noche")
+        col2.metric("Precio visual", f"{r['precio_visual']}€/noche")
+        col3.metric("Ingresos anuales (foto actual)", f"{r['ingresos_anuales_visual']:,.0f}€")
+    
+    # Delegamos toda la lógica y la interfaz visual a tu componente
+    render_roi(r)

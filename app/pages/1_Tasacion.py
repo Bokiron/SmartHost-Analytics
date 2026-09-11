@@ -1,30 +1,27 @@
-# frontend/pages/1_Tasacion.py
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from turtle import st
-
+import streamlit as st
 from PIL import Image
-from app.utils.state import init_state
+
+from utils.state import init_state
+from components.sidebar import render_sidebar
+from components.resultados import render_resultados
+from components.roi import render_roi
+from utils.calculos import construir_payload
 from core.loader import load_all_artifacts
 from services.predictor import predecir_tabular, predecir_multimodal
 from services.roi_calculos import calcular_dias_ocupados, calcular_ingresos_anuales
-import streamlit as st
-from state                     import init_state
-from components.sidebar        import render_sidebar
-from components.resultados     import render_resultados
-from components.roi            import render_roi
-from utils.calculos            import construir_payload
 
 init_state()
 
-st.title(" Tasación del apartamento")
+st.title("📈 Tasación del apartamento")
 st.caption("Predictor de precios para apartamentos turísticos en Málaga")
 
 form, foto, calcular = render_sidebar()
 
 if not calcular and st.session_state.resultado_base is None:
-    st.info(" Rellena el formulario lateral y pulsa **Calcular precio y ROI**")
+    st.info("👈 Rellena el formulario lateral y pulsa **Calcular precio y ROI**")
     st.markdown("""
     ### Cómo funciona
     1. **Rellena** los datos de tu apartamento en el panel izquierdo
@@ -36,29 +33,29 @@ if not calcular and st.session_state.resultado_base is None:
 
 if calcular:
     if foto is None:
-        st.error(" Debes subir una foto de portada para obtener el precio visual.")
+        st.error("❌ Debes subir una foto de portada para obtener el precio visual.")
         st.stop()
 
     datos = construir_payload(form)
     
-    # 1. Cargar modelos en memoria (solo tarda la primera vez por la caché)
+    # 1. Cargar modelos en memoria
     artifacts = load_all_artifacts()
 
     with st.spinner("Analizando el apartamento con IA..."):
         try:
-            # 2. Inferencia directa (sin requests)
+            # 2. Inferencia directa
             pil_img = Image.open(foto)
             precio_base = predecir_tabular(datos, artifacts)
             precio_visual = predecir_multimodal(datos, pil_img, artifacts)
             
-            # 3. Cálculos de negocio (antiguo endpoint multimodal)
+            # 3. Cálculos de negocio
             dias_ocupados   = calcular_dias_ocupados(datos["reviews_per_month"])
             ingresos_base   = calcular_ingresos_anuales(precio_base, dias_ocupados)
             ingresos_visual = calcular_ingresos_anuales(precio_visual, dias_ocupados)
             impacto_eur     = round(precio_visual - precio_base, 2)
             impacto_pct     = round((impacto_eur / precio_base) * 100, 1) if precio_base else 0.0
 
-            # 4. Construimos el diccionario que espera tu componente render_resultados()
+            # 4. Diccionario de resultados
             resultado_simulado = {
                 "precio_base": precio_base,
                 "precio_visual": precio_visual,
@@ -74,7 +71,7 @@ if calcular:
             st.session_state.resultado_reforma = None
             
         except Exception as e:
-            st.error(f" Error inesperado durante la inferencia: {e}")
+            st.error(f"❌ Error inesperado durante la inferencia: {e}")
             st.stop()
 
 if st.session_state.resultado_base is not None:

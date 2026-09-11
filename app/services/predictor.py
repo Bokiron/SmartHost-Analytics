@@ -7,8 +7,7 @@ import torchvision.models as tv_models
 import torch.nn as nn
 from torchvision import transforms
 
-from app.src.preprocessor import build_tabular_vector
-
+from src.preprocessor import build_tabular_vector
 IMAGE_TRANSFORMS = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),

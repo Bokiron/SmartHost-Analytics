@@ -6,8 +6,7 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 
-from app.backend.nn_models.networks import AirbnbMLP, MultimodalMLP
-
+from src.networks import AirbnbMLP, MultimodalMLP
 MODELS_DIR = Path("models")
 
 PREPROCESSOR_PATH  = MODELS_DIR / "preprocessor_V3.pkl"

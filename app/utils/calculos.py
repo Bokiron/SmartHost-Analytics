@@ -60,7 +60,7 @@ def construir_payload(form: dict) -> dict:
     }
 
 ## Calcular medias de valoraciones para nuevos anfitriones (sin historial)
-_DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'listingV5_PriceCapID.csv')
+_DATA_PATH = os.path.join(os.path.dirname(__file__),  '..', 'data', 'listingV5_PriceCapID.csv')
 
 
 def _cargar_medias_valoraciones() -> dict:

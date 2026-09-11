@@ -1,12 +1,9 @@
 # frontend/components/roi.py
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import json
-import requests
+from PIL import Image
+from core.loader import load_all_artifacts
+from services.predictor import predecir_multimodal
+from services.roi_calculos import calcular_dias_ocupados, calcular_ingresos_anuales
 import streamlit as st
-
-from config import API_URL
 
 
 def render_roi(r: dict) -> None:
@@ -33,14 +30,19 @@ def render_roi(r: dict) -> None:
         if st.button(" Calcular ROI de la reforma", type="primary"):
             with st.spinner("Calculando impacto de la reforma..."):
                 try:
-                    resp2 = requests.post(
-                        f"{API_URL}/predict/multimodal",
-                        data={"request": json.dumps(st.session_state.datos_payload)},
-                        files={"image": (foto_reforma.name, foto_reforma.getvalue(), foto_reforma.type)},
-                        timeout=30,
-                    )
-                    resp2.raise_for_status()
-                    st.session_state.resultado_reforma = resp2.json()
+                    artifacts = load_all_artifacts()
+                    pil_reforma = Image.open(foto_reforma)
+                    datos = st.session_state.datos_payload
+                    
+                    # Predicción de la nueva foto
+                    nuevo_precio_visual = predecir_multimodal(datos, pil_reforma, artifacts)
+                    dias_ocupados = calcular_dias_ocupados(datos["reviews_per_month"])
+                    nuevos_ingresos = calcular_ingresos_anuales(nuevo_precio_visual, dias_ocupados)
+                    
+                    st.session_state.resultado_reforma = {
+                        "precio_visual": nuevo_precio_visual,
+                        "ingresos_anuales_visual": nuevos_ingresos
+                    }
                 except Exception as e:
                     st.error(f"Error al calcular la reforma: {e}")
                     st.stop()

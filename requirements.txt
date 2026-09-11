@@ -5,7 +5,7 @@ torchvision==0.20.1
 streamlit
 pandas
 numpy
-scikit-learn
+scikit-learn==1.8.0
 geopy==2.4.1
 folium==0.20.0
 matplotlib==3.10.8
